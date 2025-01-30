@@ -1,9 +1,9 @@
-import { Background } from '/js/module/background.js';
+import { Background } from './background.js';
 
 export class Counter {
 
     #value;
-    
+
     #domElements;
     #background;
     
