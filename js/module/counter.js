@@ -17,12 +17,9 @@ export class Counter {
         this.#domElements.value.classList.add('value');
         this.#background = new Background(this.#domElements.container);
 
-        this.#domElements.container.addEventListener('touchstart', e => {
-            e.preventDefault();
-        
+        this.#domElements.container.addEventListener('pointerdown', e => {
             this.increment();
-            const touch = e.touches[e.touches.length - 1];
-            this.#background.touch(touch.clientX, touch.clientY);
+            this.#background.touch(e.clientX, e.clientY);
 
         }, { passive: false });
 

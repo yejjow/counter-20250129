@@ -9,6 +9,7 @@ body {
     -ms-user-select: none;
     user-select: none;
     isolation: isolate;
+    touch-action: none;
 
     /* filter: sepia(0.5); */
 }
