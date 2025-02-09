@@ -1,27 +1,34 @@
-import { Background } from './background.js';
+import { CountEffect } from './count-effect.js';
 
 export class Counter {
 
     #value;
 
-    #domElements;
-    #background;
+    #element;
+    #layers;
     
-    constructor(domElement) {
-        this.#domElements = {
-            container: domElement,
-            value: document.createElement('div')
+    constructor(domElement = document.createElement('div')) {
+
+        this.#element = domElement;
+        this.#element.classList.add('counter');
+
+        this.#layers = {
+            value: document.createElement('div'),
+            effect: new CountEffect(),
+            background: document.createElement('div')
         };
-        this.#domElements.container.appendChild(this.#domElements.value);
-        this.#domElements.container.classList.add('counter');
-        this.#domElements.value.classList.add('value');
-        this.#background = new Background(this.#domElements.container);
+        this.#layers.value.classList.add('value');
+        this.#layers.background.classList.add('background');
+        this.#element.appendChild(this.#layers.value);
+        this.#element.appendChild(this.#layers.effect);
+        this.#element.appendChild(this.#layers.background);
 
-        this.#domElements.container.addEventListener('pointerdown', e => {
+
+        this.#element.addEventListener('pointerdown', e => {
             this.increment();
-            this.#background.touch(e.clientX, e.clientY);
+            this.#layers.effect.touch(e.clientX, e.clientY);
 
-        }, { passive: false });
+        });
 
         this.value = 0;
 
@@ -45,7 +52,7 @@ export class Counter {
     }
 
     #updateDOM() {
-        setTimeout(() => this.#domElements.value.innerText = this.#value, 225);
+        setTimeout(() => this.#layers.value.innerText = this.#value, 225);
     }
 
 }

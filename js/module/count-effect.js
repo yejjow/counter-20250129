@@ -1,73 +1,36 @@
-export class Background {
+export class CountEffect extends HTMLElement {
 
-    #domElement;
+    #canvas;
     #context;
     #circleEffects;
     backgroundColor;
 
-    constructor(targetDOMElement) {
-        this.#domElement = document.createElement('canvas');
-        this.#domElement.classList.add('background');
-        targetDOMElement.appendChild(this.#domElement);
-        this.#context = this.#domElement.getContext('2d');
-        this.#context.save();
+    constructor() {
+        super();
+        this.#canvas = document.createElement('canvas');
+        this.appendChild(this.#canvas);
+        this.#context = this.#canvas.getContext('2d');
         this.#circleEffects = [];
-        this.backgroundColor = new Color('rgb(20, 22, 23)');
+    }
+    
+    connectedCallback() {
         this.#resize();
         window.addEventListener('resize', () => this.#resize());
         window.requestAnimationFrame((timestamp) => this.#update(timestamp));
     }
 
-    #resize() {
-        const scale = window.devicePixelRatio;
-        this.#domElement.width = this.#domElement.offsetWidth * scale;
-        this.#domElement.height = this.#domElement.offsetHeight * scale;
-    }
-
-    #update(timestamp) {
-        this.#circleEffects.forEach((circle) => circle.update(timestamp, this.#domElement));
-        this.#circleEffects = this.#circleEffects.filter((circle) => {
-            if (circle.dead) {
-                // this.backgroundColor = circle.color;
-                return false;
-            }
-            return true;
-        });
-        this.#draw();
-    }
-
-    #draw() {
-
-        this.#context.restore();
-
-        // 背景
-        this.#context.clearRect(0, 0, this.#domElement.width, this.#domElement.height);
-        this.#context.fillStyle = this.backgroundColor.toString();
-        this.#context.fillRect(0, 0, this.#domElement.width, this.#domElement.height);
-
-        this.#context.globalCompositeOperation = 'screen';
-
-
-        // 円エフェクト
-        this.#circleEffects.forEach((circle) => circle.draw(this.#context));
-
-        window.requestAnimationFrame((timestamp) => this.#update(timestamp));
-
-    }
-
     touch(x, y) {
+        
         const scale = window.devicePixelRatio;
-        // const color = '#ff0000';
-        // const color = 'rgb(0,0,0,0.5)';
 
         const hueOffset = Math.random() > 0 ? Math.floor(Math.random() * 360) : (Math.floor(Math.random() * 0) + 10) % 360;
-        // const hueOffset = 210;
+
         const circleEffectNum = 7;
         for (let i = 0; i < circleEffectNum; i++) {
             setTimeout(
                 () => this.#circleEffects.push(new CircleEffect(
-                    x * scale + Math.floor((Math.random() - 0.5) * this.#domElement.width * (0.05 + 0.05 * i) * (i / circleEffectNum) * i),
-                    y * scale + Math.floor((Math.random() - 0.5) * this.#domElement.height * (0.05 + 0.05 * i) * (i / circleEffectNum) * i),
+                    x * scale + Math.floor((Math.random() - 0.5) * this.#canvas.width * (0.05 + 0.05 * i) * (i / circleEffectNum) * i),
+                    y * scale + Math.floor((Math.random() - 0.5) * this.#canvas.height * (0.05 + 0.05 * i) * (i / circleEffectNum) * i),
                     new Color(
                         Color.HSL,
                         (hueOffset + Math.floor(360 * i / circleEffectNum) + Math.floor(Math.random() * 10)) % 360,
@@ -78,9 +41,36 @@ export class Background {
                 (Math.random() - 0.5) * 50 + 200 * i / circleEffectNum
             );
         }
+
+    }
+
+    #resize() {
+        const scale = window.devicePixelRatio;
+        this.#canvas.width = this.#canvas.offsetWidth * scale;
+        this.#canvas.height = this.#canvas.offsetHeight * scale;
+    }
+
+    #update(timestamp) {
+        this.#circleEffects.forEach((circle) => circle.update(timestamp, this.#canvas));
+        this.#circleEffects = this.#circleEffects.filter((circle) => !circle.dead);
+        this.#draw();
+    }
+
+    #draw() {
+
+        this.#context.clearRect(0, 0, this.#canvas.width, this.#canvas.height);
+
+        this.#context.globalCompositeOperation = 'screen';
+
+        this.#circleEffects.forEach((circle) => circle.draw(this.#context));
+
+        window.requestAnimationFrame((timestamp) => this.#update(timestamp));
+
     }
 
 }
+
+customElements.define('count-effect', CountEffect);
 
 class CircleEffect {
 
@@ -91,8 +81,8 @@ class CircleEffect {
     radius;
     color;
 
-    generatedAt;
-    dead;
+    #generatedAt;
+    #dead;
 
     constructor(x, y, color) {
         this.x = x;
@@ -103,10 +93,14 @@ class CircleEffect {
             current: new Color()
         }
 
-        this.generatedAt = performance.now();
-        this.dead = false;
+        this.#generatedAt = performance.now();
+        this.#dead = false;
 
         CircleEffect.count++;
+    }
+
+    get dead() {
+        return this.#dead;
     }
 
     update(timestamp, canvasElement) {
@@ -116,20 +110,20 @@ class CircleEffect {
         this.radius = Math.max(
             goalRadius *
             (
-                (Math.pow(timestamp - this.generatedAt, 1 / 2) / Math.pow(200, 1 / 2)) * 0.5 +
-                (Math.pow(timestamp - this.generatedAt, 7) / Math.pow(200, 7)) * 0.5
+                (Math.pow(timestamp - this.#generatedAt, 1 / 2) / Math.pow(200, 1 / 2)) * 0.5 +
+                (Math.pow(timestamp - this.#generatedAt, 7) / Math.pow(200, 7)) * 0.5
             ),
             0
         );
 
-        this.color.current.r = Math.floor(this.color.assigned.r * (Math.min(Math.max(timestamp - this.generatedAt - 150, 0) / 15, 1) * 0.7 + 0.3));
-        this.color.current.g = Math.floor(this.color.assigned.g * (Math.min(Math.max(timestamp - this.generatedAt - 150, 0) / 15, 1) * 0.7 + 0.3));
-        this.color.current.b = Math.floor(this.color.assigned.b * (Math.min(Math.max(timestamp - this.generatedAt - 150, 0) / 15, 1) * 0.7 + 0.3));
-        this.color.current.a = Math.max(1 - Math.max(timestamp - this.generatedAt - 200, 0) / 500, 0);
+        this.color.current.r = Math.floor(this.color.assigned.r * (Math.min(Math.max(timestamp - this.#generatedAt - 150, 0) / 15, 1) * 0.7 + 0.3));
+        this.color.current.g = Math.floor(this.color.assigned.g * (Math.min(Math.max(timestamp - this.#generatedAt - 150, 0) / 15, 1) * 0.7 + 0.3));
+        this.color.current.b = Math.floor(this.color.assigned.b * (Math.min(Math.max(timestamp - this.#generatedAt - 150, 0) / 15, 1) * 0.7 + 0.3));
+        this.color.current.a = Math.max(1 - Math.max(timestamp - this.#generatedAt - 200, 0) / 500, 0);
         console.log(this.color.current.toString());
 
         if (this.color.current.a <= 0) {
-            this.dead = true;
+            this.#dead = true;
         }
 
     }
@@ -175,7 +169,7 @@ class Color {
                         this.b = args[3];
                         this.a = args?.[4] ?? 1;
                         break;
-                        
+
                     case Color.HSL:
                         const rgba = Color.stringToRGBA(`hsla(${args[1]}, ${args[2] * 100}%, ${args[3] * 100}%, ${args?.[4] ?? 1})`);
                         Object.assign(this, rgba);
@@ -225,10 +219,10 @@ class Color {
             const bigint = parseInt(computedColorString.slice(1), 16);
 
             return {
-                r : (bigint >> 16) & 255,
-                g : (bigint >> 8) & 255,
-                b : bigint & 255,
-                a : 1
+                r: (bigint >> 16) & 255,
+                g: (bigint >> 8) & 255,
+                b: bigint & 255,
+                a: 1
             }
         }
 
@@ -242,10 +236,10 @@ class Color {
             }
 
             return {
-                r : parseInt(match[1], 10),
-                g : parseInt(match[2], 10),
-                b : parseInt(match[3], 10),
-                a : match[4] !== undefined ? parseFloat(match[4]) : 1
+                r: parseInt(match[1], 10),
+                g: parseInt(match[2], 10),
+                b: parseInt(match[3], 10),
+                a: match[4] !== undefined ? parseFloat(match[4]) : 1
             }
 
 

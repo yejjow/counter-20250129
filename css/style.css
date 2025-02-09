@@ -28,31 +28,50 @@ body {
 
 } */
 
-.counter>.value {
+.counter {
 
-    width: 100%;
-    height: 100%;
+    .value {
 
-    display: flex;
-    justify-content: center;
-    align-items: center;
+        width: 100%;
+        height: 100%;
 
-    font-family: "M PLUS 1 Code", sans-serif;
-    font-optical-sizing: auto;
-    font-weight: 500;
-    font-style: normal;
-    font-size: 50vmin;
+        display: flex;
+        justify-content: center;
+        align-items: center;
 
-    color: rgb(230, 220, 200);
-    mix-blend-mode: difference;
-}
+        font-family: "M PLUS 1 Code", sans-serif;
+        font-optical-sizing: auto;
+        font-weight: 500;
+        font-style: normal;
+        font-size: 50vmin;
 
-.background {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    z-index: -1;
+        color: rgb(230, 220, 200);
+        mix-blend-mode: difference;
+    }
 
-    mix-blend-mode: difference;
+    count-effect {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        z-index: -10;
+
+        mix-blend-mode: screen;
+
+        canvas {
+            width: 100%;
+            height: 100%;
+        }
+    }
+
+    .background {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        z-index: -100;
+
+        background-color: #141617;
+    }
+
 }
