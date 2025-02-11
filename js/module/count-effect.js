@@ -3,7 +3,7 @@ export class CountEffect extends HTMLElement {
     #canvas;
     #context;
     #circleEffects;
-    backgroundColor;
+    #rafId;
 
     constructor() {
         super();
@@ -12,15 +12,14 @@ export class CountEffect extends HTMLElement {
         this.#context = this.#canvas.getContext('2d');
         this.#circleEffects = [];
     }
-    
+
     connectedCallback() {
         this.#resize();
         window.addEventListener('resize', () => this.#resize());
-        window.requestAnimationFrame((timestamp) => this.#update(timestamp));
     }
 
-    touch(x, y) {
-        
+    touch(touchX, touchY) {
+
         const scale = window.devicePixelRatio;
 
         const hueOffset = Math.random() > 0 ? Math.floor(Math.random() * 360) : (Math.floor(Math.random() * 0) + 10) % 360;
@@ -28,16 +27,17 @@ export class CountEffect extends HTMLElement {
         const circleEffectNum = 7;
         for (let i = 0; i < circleEffectNum; i++) {
             setTimeout(
-                () => this.#circleEffects.push(new CircleEffect(
-                    x * scale + Math.floor((Math.random() - 0.5) * this.#canvas.width * (0.05 + 0.05 * i) * (i / circleEffectNum) * i),
-                    y * scale + Math.floor((Math.random() - 0.5) * this.#canvas.height * (0.05 + 0.05 * i) * (i / circleEffectNum) * i),
-                    new Color(
-                        Color.HSL,
-                        (hueOffset + Math.floor(360 * i / circleEffectNum) + Math.floor(Math.random() * 10)) % 360,
-                        0.7 + Math.floor((Math.random() - 0.5) * 10) / 50 * circleEffectNum / (i + 1) - (i + 1) / circleEffectNum * 0.1 + Math.floor(Math.random() * 10) / 100,
-                        0.05 + Math.floor((Math.random() - 0.5) * 5) / 200 * circleEffectNum / (i + 1) - (i + 1) / circleEffectNum * 0.02
-                    )
-                )),
+                () => {
+                    const x = touchX * scale + Math.floor((Math.random() - 0.5) * this.#canvas.width * (0.05 + 0.05 * i) * (i / circleEffectNum) * i);
+                    const y = touchY * scale + Math.floor((Math.random() - 0.5) * this.#canvas.height * (0.05 + 0.05 * i) * (i / circleEffectNum) * i);
+                    const hue = (hueOffset + Math.floor(360 * i / circleEffectNum) + Math.floor(Math.random() * 10)) % 360;
+                    const saturation = 0.7 + Math.floor((Math.random() - 0.5) * 10) / 50 * circleEffectNum / (i + 1) - (i + 1) / circleEffectNum * 0.1 + Math.floor(Math.random() * 10) / 100;
+                    const lightness = 0.05 + Math.floor((Math.random() - 0.5) * 5) / 200 * circleEffectNum / (i + 1) - (i + 1) / circleEffectNum * 0.02;
+                    this.#circleEffects.push(new CircleEffect(x, y, new Color(Color.HSL, hue, saturation, lightness)));
+                    if (!this.#rafId) {
+                        this.#rafId = window.requestAnimationFrame((timestamp) => this.#update(timestamp));
+                    }
+                },
                 (Math.random() - 0.5) * 50 + 200 * i / circleEffectNum
             );
         }
@@ -51,9 +51,17 @@ export class CountEffect extends HTMLElement {
     }
 
     #update(timestamp) {
+
         this.#circleEffects.forEach((circle) => circle.update(timestamp, this.#canvas));
         this.#circleEffects = this.#circleEffects.filter((circle) => !circle.dead);
-        this.#draw();
+
+        if (this.#isEffectVisible()) {
+            this.#draw();
+            this.#rafId = window.requestAnimationFrame((timestamp) => this.#update(timestamp));
+        } else {
+            this.#rafId = null;
+        }
+
     }
 
     #draw() {
@@ -64,8 +72,10 @@ export class CountEffect extends HTMLElement {
 
         this.#circleEffects.forEach((circle) => circle.draw(this.#context));
 
-        window.requestAnimationFrame((timestamp) => this.#update(timestamp));
+    }
 
+    #isEffectVisible() {
+        return this.#circleEffects.length > 0;
     }
 
 }
