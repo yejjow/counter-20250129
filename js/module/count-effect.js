@@ -3,7 +3,9 @@ export class CountEffect extends HTMLElement {
     #canvas;
     #context;
     #circleEffects;
+
     #rafId;
+    #pixcelRatio;
 
     constructor() {
         super();
@@ -14,13 +16,17 @@ export class CountEffect extends HTMLElement {
     }
 
     connectedCallback() {
+
+        this.#pixcelRatio = window.devicePixelRatio;
+
         this.#resize();
         window.addEventListener('resize', () => this.#resize());
+
+        this.#context.globalCompositeOperation = 'screen';
+
     }
 
     touch(touchX, touchY) {
-
-        const scale = window.devicePixelRatio;
 
         const hueOffset = Math.random() > 0 ? Math.floor(Math.random() * 360) : (Math.floor(Math.random() * 0) + 10) % 360;
 
@@ -28,8 +34,8 @@ export class CountEffect extends HTMLElement {
         for (let i = 0; i < circleEffectNum; i++) {
             setTimeout(
                 () => {
-                    const x = touchX * scale + Math.floor((Math.random() - 0.5) * this.#canvas.width * (0.05 + 0.05 * i) * (i / circleEffectNum) * i);
-                    const y = touchY * scale + Math.floor((Math.random() - 0.5) * this.#canvas.height * (0.05 + 0.05 * i) * (i / circleEffectNum) * i);
+                    const x = touchX * this.#pixcelRatio + Math.floor((Math.random() - 0.5) * this.#canvas.width * (0.05 + 0.05 * i) * (i / circleEffectNum) * i);
+                    const y = touchY * this.#pixcelRatio + Math.floor((Math.random() - 0.5) * this.#canvas.height * (0.05 + 0.05 * i) * (i / circleEffectNum) * i);
                     const hue = (hueOffset + Math.floor(360 * i / circleEffectNum) + Math.floor(Math.random() * 10)) % 360;
                     const saturation = 0.7 + Math.floor((Math.random() - 0.5) * 10) / 50 * circleEffectNum / (i + 1) - (i + 1) / circleEffectNum * 0.1 + Math.floor(Math.random() * 10) / 100;
                     const lightness = 0.05 + Math.floor((Math.random() - 0.5) * 5) / 200 * circleEffectNum / (i + 1) - (i + 1) / circleEffectNum * 0.02;
@@ -45,9 +51,8 @@ export class CountEffect extends HTMLElement {
     }
 
     #resize() {
-        const scale = window.devicePixelRatio;
-        this.#canvas.width = this.#canvas.offsetWidth * scale;
-        this.#canvas.height = this.#canvas.offsetHeight * scale;
+        this.#canvas.width = this.#canvas.offsetWidth * this.#pixcelRatio;
+        this.#canvas.height = this.#canvas.offsetHeight * this.#pixcelRatio;
     }
 
     #update(timestamp) {
@@ -65,13 +70,8 @@ export class CountEffect extends HTMLElement {
     }
 
     #draw() {
-
         this.#context.clearRect(0, 0, this.#canvas.width, this.#canvas.height);
-
-        this.#context.globalCompositeOperation = 'screen';
-
         this.#circleEffects.forEach((circle) => circle.draw(this.#context));
-
     }
 
     #isEffectVisible() {

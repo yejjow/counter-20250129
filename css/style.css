@@ -10,23 +10,7 @@ body {
     user-select: none;
     isolation: isolate;
     touch-action: none;
-
-    /* filter: sepia(0.5); */
 }
-
-/* #counter {
-
-    grid-row: 1 / -1;
-    grid-column: 1 / -1;
-
-    width: 100%;
-    height: 100dvh;
-
-    position: relative;
-    overflow: hidden;
-    isolation: isolate;
-
-} */
 
 .counter {
 
@@ -47,9 +31,11 @@ body {
 
         color: rgb(230, 220, 200);
         mix-blend-mode: difference;
+
     }
 
     count-effect {
+
         position: absolute;
         inset: 0;
         width: 100%;
@@ -57,14 +43,19 @@ body {
         z-index: -10;
 
         mix-blend-mode: screen;
-
+        
         canvas {
+            
             width: 100%;
             height: 100%;
+
+            filter: blur(15px);
+
         }
     }
 
     .background {
+
         position: absolute;
         inset: 0;
         width: 100%;
@@ -72,6 +63,7 @@ body {
         z-index: -100;
 
         background-color: #141617;
+        
     }
 
 }
